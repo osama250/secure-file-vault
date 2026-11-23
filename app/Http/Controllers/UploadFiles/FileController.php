@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\UploadFiles;
 
+use App\Exceptions\InvalidEncryptedFileException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UploadFiles\EncryptFileRequest;
 use App\Http\Requests\UploadFiles\DecryptFileRequest;
@@ -30,14 +31,15 @@ class FileController extends Controller
             throw new RuntimeException('Unable to read uploaded file.');
         }
 
-        $encryptedContent = $this->encryptionService->encrypt( $content , $request->input('password') );
-        $outputName       = $request->input('output_name') . '.enc';
+        $encryptedContent = $this->encryptionService->encrypt( $content, $request->input('password') );
+
+        $outputName = $request->input('output_name') . '.enc';
 
         return response($encryptedContent, 200, [
-            'Content-Type'           => 'application/octet-stream',
-            'Content-Disposition'    => 'attachment; filename="' . $outputName . '"',
-            'Cache-Control'          => 'no-store',
-            'X-Content-Type-Options' => 'nosniff',
+            'Content-Type'              => 'application/octet-stream',
+            'Content-Disposition'       => 'attachment; filename="' . $outputName . '"',
+            'Cache-Control'             => 'no-store',
+            'X-Content-Type-Options'    => 'nosniff',
         ]);
     }
 
@@ -51,17 +53,21 @@ class FileController extends Controller
         }
 
         try {
-            $decryptedContent = $this->encryptionService->decrypt( $content, $request->input('password'));
-        } catch (RuntimeException $e) {
+            $decryptedContent = $this->encryptionService->decrypt(
+                $content,
+                $request->input('password')
+            );
+        } catch (InvalidEncryptedFileException $e) {
             return response('Invalid password or corrupted file.', 422);
         }
 
         $outputName = $request->input('output_name');
+
         return response($decryptedContent, 200, [
-            'Content-Type'           => 'application/octet-stream',
-            'Content-Disposition'    => 'attachment; filename="' . $outputName . '"',
-            'Cache-Control'          => 'no-store',
-            'X-Content-Type-Options' => 'nosniff',
+            'Content-Type'              => 'application/octet-stream',
+            'Content-Disposition'       => 'attachment; filename="' . $outputName . '"',
+            'Cache-Control'             => 'no-store',
+            'X-Content-Type-Options'    => 'nosniff',
         ]);
     }
 }
