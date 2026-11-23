@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Services\FileEncryptionService;
 use PHPUnit\Framework\TestCase;
+use App\Exceptions\InvalidEncryptedFileException;
 use RuntimeException;
 
 class FileEncryptionServiceTest extends TestCase
@@ -31,7 +32,7 @@ class FileEncryptionServiceTest extends TestCase
     public function test_it_rejects_wrong_password(): void
     {
         $encrypted = $this->service->encrypt('Secret Data', 'CorrectPassword123!');
-        $this->expectException(RuntimeException::class);
+        $this->expectException(InvalidEncryptedFileException::class);
         $this->expectExceptionMessage('Invalid password or corrupted file.');
         $this->service->decrypt( $encrypted,'WrongPassword123!');
     }
